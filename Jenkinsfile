@@ -19,11 +19,11 @@ pipeline {
                 sh '''
                 echo Installing .NET SDK 6.0
                 wget https://packages.microsoft.com/config/ubuntu/22.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
-                sudo dpkg -i packages-microsoft-prod.deb
-                sudo apt-get update
-                sudo apt-get install -y apt-transport-https
-                sudo apt-get update
-                sudo apt-get install -y dotnet-sdk-6.0
+                 dpkg -i packages-microsoft-prod.deb
+                 apt-get update
+                 apt-get install -y apt-transport-https
+                 apt-get update
+                 apt-get install -y dotnet-sdk-6.0
                 '''
             }
         }
@@ -32,7 +32,7 @@ pipeline {
             steps {
                 sh '''
                 echo Uninstalling current Chrome
-                sudo apt-get remove -y google-chrome-stable || true
+                 apt-get remove -y google-chrome-stable || true
                 '''
             }
         }
@@ -42,7 +42,7 @@ pipeline {
                 sh '''
                 echo Installing Chrome version $CHROME_VERSION
                 wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-                sudo apt-get install -y ./google-chrome-stable_current_amd64.deb
+                 apt-get install -y ./google-chrome-stable_current_amd64.deb
                 google-chrome --version
                 '''
             }
@@ -54,8 +54,8 @@ pipeline {
                 echo Downloading ChromeDriver version $CHROMEDRIVER_VERSION
                 wget https://chromedriver.storage.googleapis.com/$CHROMEDRIVER_VERSION/chromedriver_linux64.zip
                 unzip chromedriver_linux64.zip
-                sudo mv chromedriver $CHROMEDRIVER_INSTALL_PATH
-                sudo chmod +x $CHROMEDRIVER_INSTALL_PATH
+                 mv chromedriver $CHROMEDRIVER_INSTALL_PATH
+                 chmod +x $CHROMEDRIVER_INSTALL_PATH
                 $CHROMEDRIVER_INSTALL_PATH --version
                 '''
             }
