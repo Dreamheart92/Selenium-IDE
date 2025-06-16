@@ -2,10 +2,9 @@ pipeline {
     agent any
 
     environment {
-        CHROME_VERSION = '127.0.6533.73'
+        CHROME_VERSION = 'google-chrome-stable=127.0.6533.73-1'
         CHROMEDRIVER_VERSION = '127.0.6533.72'
-        CHROME_INSTALL_PATH = 'C:\\Program Files\\Google\\Chrome\\Application'
-        CHROMEDRIVER_INSTALL_PATH = 'C:\\Program Files\\Google\\Chrome\\Application\\chromedriver.exe'
+        CHROMEDRIVER_INSTALL_PATH = '/usr/local/bin/chromedriver'
     }
 
     stages {
@@ -17,51 +16,60 @@ pipeline {
 
         stage('Set up .NET Core') {
             steps {
-                bat '''
+                sh '''
                 echo Installing .NET SDK 6.0
-                choco install dotnet-sdk --version 6.0.100 --yes
+                wget https://packages.microsoft.com/config/ubuntu/22.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
+                sudo dpkg -i packages-microsoft-prod.deb
+                sudo apt-get update
+                sudo apt-get install -y apt-transport-https
+                sudo apt-get update
+                sudo apt-get install -y dotnet-sdk-6.0
                 '''
             }
         }
 
         stage('Uninstall Current Chrome') {
             steps {
-                bat '''
+                sh '''
                 echo Uninstalling current Chrome
-                choco uninstall googlechrome --yes
+                sudo apt-get remove -y google-chrome-stable || true
                 '''
             }
         }
 
         stage('Install Specific Chrome Version') {
             steps {
-                bat '''
-                echo Installing Chrome version %CHROME_VERSION%
-                choco install googlechrome --version %CHROME_VERSION% --yes --alow-downgrade --ignore-checksums
+                sh '''
+                echo Installing Chrome version $CHROME_VERSION
+                wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+                sudo apt-get install -y ./google-chrome-stable_current_amd64.deb
+                google-chrome --version
                 '''
             }
         }
 
         stage('Download and Install ChromeDriver') {
             steps {
-                bat '''
-                 echo Downloading ChromeDriver version %CHROMEDRIVER_VERSION%
-                 powershell -command "Invoke-WebRequest -Uri https://chromedriver.storage.googleapis.com/%CHROMEDRIVER_VERSION%/chromedriver_win32.zip -OutFile chromedriver.zip -UseBasicParsing"
-                  powershell -command "Expand-Archive -Path chromedriver.zip -DestinationPath ."
-                  powershell -command "Move-Item -Path .\\chromedriver.exe -Destination '%CHROME_INSTALL_PATH%\\chromedriver.exe' -Force"
-                  '''
+                sh '''
+                echo Downloading ChromeDriver version $CHROMEDRIVER_VERSION
+                wget https://chromedriver.storage.googleapis.com/$CHROMEDRIVER_VERSION/chromedriver_linux64.zip
+                unzip chromedriver_linux64.zip
+                sudo mv chromedriver $CHROMEDRIVER_INSTALL_PATH
+                sudo chmod +x $CHROMEDRIVER_INSTALL_PATH
+                $CHROMEDRIVER_INSTALL_PATH --version
+                '''
             }
         }
 
         stage('Restore Dependencies') {
             steps {
-                bat 'dotnet restore SeleiniumIde.sln'
+                sh 'dotnet restore SeleniumIde.sln'
             }
         }
 
         stage('Build') {
             steps {
-                bat 'dotnet build SeleiniumIde.sln --configuration Release'
+                sh 'dotnet build SeleniumIde.sln --configuration Release'
             }
         }
     }
